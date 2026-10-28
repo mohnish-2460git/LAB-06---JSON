@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LAB 06 - JSON Books</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 30px; }
+        .card { border: 1px solid #ccc; padding: 15px; margin-top: 15px; border-radius: 5px; max-width: 400px; display: none; }
+        .error { color: red; margin-top: 15px; display: none; }
+    </style>
+</head>
+<body>
+
+    <label for="bookTitle">Book Title:</label>
+    <select id="bookTitle">
+        <option value="">Select a book</option>
+    </select>
+
+    <div id="bookDetails">
+        <div id="bookCard" class="card">
+            <!-- FIX: Added missing heading element for displayTitle -->
+            <h3 id="displayTitle">Book Title Placeholder</h3>
+            <p><strong>Author:</strong> <span id="displayAuthor"></span></p>
+            <p><strong>Publication Year:</strong> <span id="displayYear"></span></p>
+            <p><strong>Genre:</strong> <span id="displayGenre"></span></p>
+        </div>
+    </div>
+
+    <p id="errorMessage" class="error"></p>
+
+    <script>
+        const jsonUrl = "https://raw.githubusercontent.com/mohnish-2460git/LAB-06---JSON/refs/heads/main/Author/books.json"; 
+        let globalBooksArray = [];
+
+        // ii. Fetching data from GitHub
+        fetch(jsonUrl)
+            .then(response => {
+                if (!response.ok) throw new Error("Failed to load JSON data");
+                return response.json();
+            })
+            .then(data => {
+                // FIX: Corrected capitalization to match your exact JSON root key "Books"
+                globalBooksArray = data.Books || []; 
+                populateDropdown(globalBooksArray);
+            })
+            .catch(error => {
+                console.error("Error fetching data:", error);
+                showError("Error connecting to the book database.");
+            });
+
+        // Populate dropdown menu with options dynamically
+        function populateDropdown(books) {
+            const selectElement = document.getElementById("bookTitle");
+            // FIX: Removed the undefined "data" reference line that was breaking execution
+            books.forEach(book => {
+                const option = document.createElement("option");
+                option.value = book.title;
+                option.textContent = book.title;
+                selectElement.appendChild(option);
+            });
+        }
+
+        // Event listener for dropdown changes
+        document.getElementById("bookTitle").addEventListener("change", function(e) {
+            const selectedTitle = e.target.value;
+            if (!selectedTitle) {
+                hideDetails();
+                return;
+            }
+
+            // iii. Search through the local copy of fetched array
+            const foundBook = globalBooksArray.find(book => book.title === selectedTitle);
+
+            // iv. Display book details or error message
+            if (foundBook) {
+                document.getElementById("errorMessage").style.display = "none";
+                document.getElementById("displayTitle").textContent = foundBook.title;
+                document.getElementById("displayAuthor").textContent = foundBook.author;
+                
+                // FIX: Mapped to your exact key names ("publicationYear" and "genres")
+                document.getElementById("displayYear").textContent = foundBook.publicationYear;
+                document.getElementById("displayGenre").textContent = foundBook.genres.join(", "); 
+                
+                document.getElementById("bookCard").style.display = "block";
+            } else {
+                showError("Book details not found.");
+            }
+        });
+
+        function showError(msg) {
+            document.getElementById("bookCard").style.display = "none";
+            const err = document.getElementById("errorMessage");
+            err.textContent = msg;
+            err.style.display = "block";
+        }
+
+        function hideDetails() {
+            document.getElementById("bookCard").style.display = "none";
+            document.getElementById("errorMessage").style.display = "none";
+        }
+    </script>
+</body>
+</html>
